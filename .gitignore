@@ -1,0 +1,6 @@
+# Sublime Project
+*.sublime-project
+*.sublime-workspace
+
+# CLJS
+cljs.jar
