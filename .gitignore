@@ -4,3 +4,8 @@
 
 # CLJS
 cljs.jar
+.cljs_rhino_repl/
+figwheel_server.log
+
+# Artifacts
+out/
