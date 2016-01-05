@@ -15,16 +15,16 @@
 (defn gen-db []
     "Returns a database populated with some symbols for testing."
     (d/db-with (d/empty-db schema)
-                [[:db/add -1 :name "void"]
-                 [:db/add -2 :name "Object"]
-                 [:db/add -3 :name "Shape"]
-                 [:db/add -4 :name "Circle"]
-                 [:db/add -5 :name "Rectangle"]
-                 [:db/add -6 :name "Square"]
+               [[:db/add -1 :name "void"]
+                [:db/add -2 :name "Object"]
+                [:db/add -3 :name "Shape"]
+                [:db/add -4 :name "Circle"]
+                [:db/add -5 :name "Rectangle"]
+                [:db/add -6 :name "Square"]
 
-                 (fact-extends "Circle" "Shape")
-                 (fact-extends "Rectangle" "Shape")
-                 (fact-extends "Square" "Rectangle")]))
+                (fact-extends "Circle" "Shape")
+                (fact-extends "Rectangle" "Shape")
+                (fact-extends "Square" "Rectangle")]))
 
 (def not-nil? (complement nil?))
 
@@ -34,19 +34,20 @@
 (def typing-rules
     '[  [(subtype ?t1 ?t2) [?t2 :name "Object"]]
         [(subtype ?t1 ?t2) [?t1 :name ?n] [?t2 :name ?n]]
-        [(subtype ?t1 ?t2) [?t1 :extends ?t2]]  ])
+        [(subtype ?t1 ?t2) [?t1 :extends ?t2]]
+        [(subtype ?t1 ?t2) [?t1 :extends ?anything] (subtype ?anything ?t2)] ])
 
 (defn is-subtype? [db tname1 tname2]
     "Checks wether tname1 is a subtype of tname2, following a set of typing rules."
-    (let [result (d/q '[    :find [?t1 ?t2]
-                            :in $ % ?tname1 ?tname2
-                            :where  [?t1 :name ?tname1]
-                                    [?t2 :name ?tname2]
-                                    (subtype ?t1 ?t2) ] db typing-rules tname1 tname2)]
+    (let [result (d/q '[:find [?t1 ?t2]
+                        :in $ % ?tname1 ?tname2
+                        :where [?t1 :name ?tname1]
+                               [?t2 :name ?tname2]
+                               (subtype ?t1 ?t2) ] db typing-rules tname1 tname2)]
         (not-nil? result)))
 
 
-;; Ex 2 - Typing checks
+;; Ex 2 - Consistency checks
 
 (defn check-void [db]
     "Void should not be the subtype of anything."
@@ -60,9 +61,15 @@
 
 ;; Tests
 
-(let [db (gen-db)]
-    (println
-        "Circle subtype-of Shape: " (is-subtype? db "Circle" "Shape")
-        "Shape subtype-of Shape: " (is-subtype? db "Shape" "Shape")
-        "Circle subtype-of Rectangle: " (is-subtype? db "Circle" "Rectangle")
-        "Void check: " (check-void db)))
+(defn test-subtype [db t1 t2]
+    "Given two type names, will print a human readable string on their relation."
+    (let [relation (if (is-subtype? db t1 t2) "is a subtype of" "is NOT a subtype of")]
+        (println "\t" t1 relation t2)))
+
+(let [db (gen-db)
+      type-names ["Object" "Shape" "Circle" "Rectangle" "Square"]]
+    (println "[TYPE CHECKS]")
+    (dorun
+        (for [t2 type-names t1 type-names] (test-subtype db t1 t2)))
+    (println "[CONSISTENCY CHECKS]")
+    (println "\t" "Void check: " (check-void db)))
