@@ -1,12 +1,6 @@
-(ns ^:figwheel-load datlogic.core
+(ns datlogic.core
     (:require
         [datascript.core :as d]))
-
-(def schema {
-    :name       {:db/unique :db.unique/identity}
-    :subtype-of {:db/valueType :db.type/ref}
-    :extends    {:db/valueType :db.type/ref}})
-;; (def conn (d/create-conn schema))
 
 (defn fact-extends [child parent]
     "Returns the datom representation of an inheritance relation between the given types."
@@ -14,17 +8,20 @@
 
 (defn gen-db []
     "Returns a database populated with some symbols for testing."
-    (d/db-with (d/empty-db schema)
-               [[:db/add -1 :name "void"]
-                [:db/add -2 :name "Object"]
-                [:db/add -3 :name "Shape"]
-                [:db/add -4 :name "Circle"]
-                [:db/add -5 :name "Rectangle"]
-                [:db/add -6 :name "Square"]
+    (let [schema {:name       {:db/unique :db.unique/identity}
+                  :subtype-of {:db/valueType :db.type/ref}
+                  :extends    {:db/valueType :db.type/ref} }]
+        (d/db-with (d/empty-db schema)
+                   [[:db/add -1 :name "void"]
+                    [:db/add -2 :name "Object"]
+                    [:db/add -3 :name "Shape"]
+                    [:db/add -4 :name "Circle"]
+                    [:db/add -5 :name "Rectangle"]
+                    [:db/add -6 :name "Square"]
 
-                (fact-extends "Circle" "Shape")
-                (fact-extends "Rectangle" "Shape")
-                (fact-extends "Square" "Rectangle")]))
+                    (fact-extends "Circle" "Shape")
+                    (fact-extends "Rectangle" "Shape")
+                    (fact-extends "Square" "Rectangle")])))
 
 (def not-nil? (complement nil?))
 
